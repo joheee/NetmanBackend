@@ -7,7 +7,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Netman Backend')
-    .setDescription('Swagger docs for the netman backend!!')
+    .setDescription('Swagger docs for the netman backend')
     .setVersion('3.3')
     .build();
   const document = SwaggerModule.createDocument(app, config);
