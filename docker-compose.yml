@@ -4,9 +4,10 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
       target: production
     container_name: backend
+    image: backend_image
     environment:
       NODE_ENV: production
     ports:
