@@ -6,8 +6,8 @@ services:
       context: .
       dockerfile: dockerfile
       target: production
-    container_name: backend
-    image: backend_image
+    container_name: netman_backend_container
+    image: netman_backend_image
     environment:
       NODE_ENV: production
     ports:
