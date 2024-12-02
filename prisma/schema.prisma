@@ -12,3 +12,21 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Room {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  capacity  Int
+  computers Computer[]
+}
+
+model Computer {
+  id       String  @id @default(uuid())
+  hostname String
+  number   Int
+  ip       String
+  mac      String
+  gateway String @default("10.21.45.1")
+  Room     Room?   @relation(fields: [roomId], references: [id])
+  roomId   String?
+}
