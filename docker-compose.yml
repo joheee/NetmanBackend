@@ -1,13 +1,13 @@
 version: '3.3'
 
 services:
-  backend:
+  netman_backend_image:
     build:
       context: .
       dockerfile: dockerfile
       target: production
-    container_name: netman_backend_container
-    image: netman_backend_image
+    container_name: netman_backend
+    image: johedotcom/netman-backend-repository:latest
     environment:
       NODE_ENV: production
     ports:
