@@ -8,10 +8,9 @@ services:
       target: production
     container_name: netman_backend
     image: johedotcom/netman-backend-repository:latest
-    environment:
-      NODE_ENV: production
+    restart: always
     ports:
-      - "5040:3000" 
+      - '0.0.0.0:4040:3000'
     volumes:
       - .:/usr/src/app
-    command: ["node", "dist/main.js"]
+    command: ['node', 'dist/main.js']
