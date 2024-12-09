@@ -13,4 +13,4 @@ services:
       - '0.0.0.0:4040:3000'
     volumes:
       - .:/usr/src/app
-    command: ['node', 'dist/main.js']
+    command: ['node', 'dist/src/main.js']
