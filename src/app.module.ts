@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { WolModule } from './wol/wol.module';
+import { ChildProcessModule } from './api/child_process/child_process.module';
+import { WolModule } from './api/wol/wol.module';
 
 @Module({
-  imports: [WolModule],
+  imports: [WolModule, ChildProcessModule],
 })
 export class AppModule {}
