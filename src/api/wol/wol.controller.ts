@@ -3,7 +3,7 @@ import { WolService } from './wol.service';
 import { CreateWolDto } from './dto/create-wol.dto';
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('wol-controller')
+@ApiTags('Wake on LAN (WOL) Controller')
 @Controller('wol')
 export class WolController {
   constructor(private readonly wolService: WolService) {}

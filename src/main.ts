@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { useContainer } from 'class-validator';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +17,7 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors();
 
+  // TRANSFORMER PIPES
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -24,6 +26,9 @@ async function bootstrap() {
       },
     }),
   );
+
+  // ENABLE CUSTOM VALIDATOR
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   await app.listen(3000);
 }

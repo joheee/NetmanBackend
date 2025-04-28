@@ -1,0 +1,22 @@
+import {
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
+} from 'class-validator';
+import { RoomService } from '../room.service';
+import { Injectable } from '@nestjs/common';
+
+@ValidatorConstraint({ async: true })
+@Injectable()
+export class IsUniqueNameConstraint implements ValidatorConstraintInterface {
+  constructor(private readonly roomService: RoomService) {}
+
+  async validate(name: string) {
+    const room = await this.roomService.findOneByName(name);
+    return !room; // Jika sudah ada, berarti tidak unik
+  }
+
+  defaultMessage(args: ValidationArguments): string {
+    return `The name ${args.value} is already taken.`;
+  }
+}
