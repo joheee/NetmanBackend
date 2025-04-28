@@ -1,12 +1,15 @@
+import { Inject } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { spawn } from 'child_process';
 import { fromEvent, map, merge } from 'rxjs';
-import { Server } from 'socket.io';
+import { Socket } from 'socket.io';
+import serverConfig from 'src/config/server.config';
 
 @WebSocketGateway({
   cors: {
@@ -14,11 +17,16 @@ import { Server } from 'socket.io';
   },
 })
 export class ChildProcessGateway {
-  @WebSocketServer()
-  server: Server;
+  constructor(
+    @Inject(serverConfig.KEY)
+    private serverConfiguration: ConfigType<typeof serverConfig>,
+  ) {}
 
   @SubscribeMessage('executeCommand')
-  handleExecuteCommand(@MessageBody() data: unknown) {
+  handleExecuteCommand(
+    @MessageBody() data: unknown,
+    @ConnectedSocket() client: Socket, // <-- Tambahkan ini
+  ) {
     try {
       if (typeof data === 'string') {
         data = JSON.parse(data);
@@ -48,9 +56,9 @@ export class ChildProcessGateway {
         const args = [
           `\\\\${ip}`,
           '-u',
-          'netman',
+          this.serverConfiguration.windowsUsername,
           '-p',
-          'netman',
+          this.serverConfiguration.windowsPassword,
           '-i',
           '1',
           'cmd',
@@ -77,11 +85,11 @@ export class ChildProcessGateway {
         );
 
         merge(stderr$, close$).subscribe((payload) => {
-          this.server.emit('childProcessOutput', payload);
+          client.emit('executeCommandOutput', payload);
         });
       });
     } catch (error) {
-      this.server.emit('error', {
+      client.emit('error', {
         message: (error as Error).message || 'Unknown error occurred.',
       });
     }
