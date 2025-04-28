@@ -26,15 +26,15 @@ export class RoomController {
   @Post()
   @ApiOperation({ summary: `create ${TABLE_NAME}` })
   async create(@Body() createRoomDto: CreateRoomDto) {
-    const createRoom = await this.roomService.create(createRoomDto);
-    return new HttpException(createRoom, HttpStatus.OK);
+    const createItem = await this.roomService.create(createRoomDto);
+    return new HttpException(createItem, HttpStatus.OK);
   }
 
   @Get()
   @ApiOperation({ summary: `find all ${TABLE_NAME}` })
   async findAll() {
-    const findAllRoom = await this.roomService.findAll();
-    return new HttpException(findAllRoom, HttpStatus.OK);
+    const findAllItem = await this.roomService.findAll();
+    return new HttpException(findAllItem, HttpStatus.OK);
   }
 
   @Get(':id')
@@ -46,8 +46,8 @@ export class RoomController {
   })
   @UsePipes(IsRoomIdExist)
   async findOne(@Param('id') id: string) {
-    const findOneRoom = await this.roomService.findOne(id);
-    return new HttpException(findOneRoom, HttpStatus.OK);
+    const findOneItem = await this.roomService.findOne(id);
+    return new HttpException(findOneItem, HttpStatus.OK);
   }
 
   @Patch(':id')
@@ -61,8 +61,8 @@ export class RoomController {
     @Param('id', IsRoomIdExist) id: string,
     @Body() updateRoomDto: UpdateRoomDto,
   ) {
-    const updateRoom = await this.roomService.update(id, updateRoomDto);
-    return new HttpException(updateRoom, HttpStatus.OK);
+    const updateItem = await this.roomService.update(id, updateRoomDto);
+    return new HttpException(updateItem, HttpStatus.OK);
   }
 
   @Delete(':id')
@@ -74,7 +74,7 @@ export class RoomController {
   })
   @UsePipes(IsRoomIdExist)
   async remove(@Param('id') id: string) {
-    const removeRoom = await this.roomService.remove(id);
-    return new HttpException(removeRoom, HttpStatus.OK);
+    const removeItem = await this.roomService.remove(id);
+    return new HttpException(removeItem, HttpStatus.OK);
   }
 }

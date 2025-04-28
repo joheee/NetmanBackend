@@ -6,9 +6,8 @@ export class IsRoomIdExist implements PipeTransform {
   constructor(private readonly roomService: RoomService) {}
 
   async transform(id: any) {
-    console.log('jojo', id);
-    const room = await this.roomService.findOne(id);
-    if (!room) {
+    const findRoom = await this.roomService.findOne(id);
+    if (!findRoom) {
       throw new BadRequestException(`Room with ID ${id} not found`);
     }
     return id;

@@ -3,6 +3,7 @@ import { ChildProcessModule } from './api/child_process/child_process.module';
 import { WolModule } from './api/wol/wol.module';
 import { ConfigModule } from '@nestjs/config';
 import { RoomModule } from './api/room/room.module';
+import { CommandModule } from './api/command/command.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { RoomModule } from './api/room/room.module';
     WolModule,
     ChildProcessModule,
     RoomModule,
+    CommandModule,
   ],
 })
 export class AppModule {}
