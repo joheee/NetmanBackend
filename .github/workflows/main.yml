@@ -1,4 +1,4 @@
-name: CI Googolplex Backend to docker hub johedotcom/netman-backend-repository
+name: CI netman Backend to docker hub johedotcom/netman-backend-repository
 
 on:
   push:
@@ -37,3 +37,22 @@ jobs:
         run: |
           docker compose build
           docker compose push
+
+  deploy:
+    runs-on: ubuntu-latest
+    name: Continuous Deployment to Private VPS
+    needs: push_to_registry
+    steps:
+      - name: Deploy to Private VPS using SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            cd /project/netman/netman-backend-server
+            docker rm netman_backend -f
+            docker rmi johedotcom/netman-backend-repository -f
+            docker compose -f docker-compose-server.yaml down
+            docker compose -f docker-compose-server.yaml pull
+            docker compose -f docker-compose-server.yml up -d
