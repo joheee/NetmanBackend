@@ -24,6 +24,7 @@ export class CommandController {
   constructor(private readonly commandService: CommandService) {}
 
   @Post()
+  @ApiOperation({ summary: `create ${TABLE_NAME}` })
   async create(@Body() createCommandDto: CreateCommandDto) {
     const createItem = await this.commandService.create(createCommandDto);
     return new HttpException(createItem, HttpStatus.OK);
