@@ -13,7 +13,7 @@ export class IsUniqueNameConstraint implements ValidatorConstraintInterface {
 
   async validate(name: string) {
     const room = await this.roomService.findOneByName(name);
-    return !room; // Jika sudah ada, berarti tidak unik
+    return !room;
   }
 
   defaultMessage(args: ValidationArguments): string {
