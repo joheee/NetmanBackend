@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { RoomModule } from './api/room/room.module';
 import { CommandModule } from './api/command/command.module';
 import { ComputerModule } from './api/computer/computer.module';
+import { LogCommandComputerModule } from './api/log_command_computer/log_command_computer.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ComputerModule } from './api/computer/computer.module';
     RoomModule,
     CommandModule,
     ComputerModule,
+    LogCommandComputerModule,
   ],
 })
 export class AppModule {}
