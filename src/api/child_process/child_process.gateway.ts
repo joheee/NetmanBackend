@@ -22,6 +22,13 @@ export class ChildProcessGateway {
     private serverConfiguration: ConfigType<typeof serverConfig>,
   ) {}
 
+  @SubscribeMessage('testingConnection')
+  handleTestingConnection(@ConnectedSocket() client: Socket) {
+    client.emit('testingConnectionOutput', {
+      message: 'connection success',
+    });
+  }
+
   @SubscribeMessage('executeCommand')
   handleExecuteCommand(
     @MessageBody() data: unknown,
