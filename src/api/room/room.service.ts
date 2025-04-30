@@ -7,6 +7,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class RoomService {
   constructor(private readonly prisma: PrismaService) {}
 
+  include() {
+    return {
+      include: {
+        computers: true,
+      },
+    };
+  }
+
   async create(createRoomDto: CreateRoomDto) {
     return await this.prisma.room.create({
       data: createRoomDto,
@@ -14,12 +22,15 @@ export class RoomService {
   }
 
   async findAll() {
-    return await this.prisma.room.findMany();
+    return await this.prisma.room.findMany({
+      ...this.include(),
+    });
   }
 
   async findOne(id: string) {
     return await this.prisma.room.findFirst({
       where: { id },
+      ...this.include(),
     });
   }
 
