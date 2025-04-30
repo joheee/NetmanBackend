@@ -21,8 +21,8 @@ model Computer {
   id        String    @id @default(uuid())
   hostname  String
   number    Int
-  ip        String
-  mac       String
+  ip        String    @unique
+  mac       String    @unique
   gateway   String    @default("10.21.45.1")
   roomId    String?
   createdAt DateTime  @default(now())

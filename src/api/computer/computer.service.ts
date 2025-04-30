@@ -23,6 +23,18 @@ export class ComputerService {
     });
   }
 
+  async findOneByIp(ip: string) {
+    return await this.prisma.computer.findFirst({
+      where: { ip },
+    });
+  }
+
+  async findOneByMac(mac: string) {
+    return await this.prisma.computer.findFirst({
+      where: { mac },
+    });
+  }
+
   async update(id: string, updateComputerDto: UpdateComputerDto) {
     return await this.prisma.computer.update({
       where: { id },

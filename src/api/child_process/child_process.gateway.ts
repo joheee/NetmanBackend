@@ -25,8 +25,10 @@ export class ChildProcessGateway {
   @SubscribeMessage('executeCommand')
   handleExecuteCommand(
     @MessageBody() data: unknown,
-    @ConnectedSocket() client: Socket, // <-- Tambahkan ini
+    @ConnectedSocket() client: Socket,
   ) {
+    const overallStartTime = Date.now();
+
     try {
       if (typeof data === 'string') {
         data = JSON.parse(data);
@@ -51,7 +53,11 @@ export class ChildProcessGateway {
         );
       }
 
+      const ipTimings = new Map<string, number>();
+
       ips.forEach((ip) => {
+        ipTimings.set(ip, Date.now());
+
         const command = 'psexec';
         const args = [
           `\\\\${ip}`,
@@ -68,29 +74,61 @@ export class ChildProcessGateway {
 
         const child = spawn(command, args);
 
+        const stdout$ = fromEvent<Buffer>(child.stdout, 'data').pipe(
+          map((data) => {
+            const executionTimeMs = Date.now() - ipTimings.get(ip);
+            const executionTimeSec = (executionTimeMs / 1000).toFixed(2);
+            return {
+              ip,
+              type: 'stdout',
+              message: data.toString().trim(),
+              executionTime: `${executionTimeSec} s`,
+            };
+          }),
+        );
+
         const stderr$ = fromEvent<Buffer>(child.stderr, 'data').pipe(
-          map((data) => ({
-            ip,
-            type: 'stderr',
-            message: data.toString().trim(),
-          })),
+          map((data) => {
+            const executionTimeMs = Date.now() - ipTimings.get(ip);
+            const executionTimeSec = (executionTimeMs / 1000).toFixed(2);
+            return {
+              ip,
+              type: 'stderr',
+              message: data.toString().trim(),
+              executionTime: `${executionTimeSec} s`,
+            };
+          }),
         );
 
         const close$ = fromEvent<number>(child, 'close').pipe(
-          map((code) => ({
-            ip,
-            type: 'close',
-            code,
-          })),
+          map((code) => {
+            const executionTimeMs = Date.now() - ipTimings.get(ip);
+            const executionTimeSec = (executionTimeMs / 1000).toFixed(2);
+            return {
+              ip,
+              type: 'close',
+              code,
+              executionTime: `${executionTimeSec} s`,
+            };
+          }),
         );
 
-        merge(stderr$, close$).subscribe((payload) => {
+        merge(stdout$, stderr$, close$).subscribe((payload) => {
           client.emit('executeCommandOutput', payload);
         });
       });
+
+      client.emit('executeCommandStarted', {
+        message: `Command execution started for ${ips.length} machines`,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
+      const errorTimeMs = Date.now() - overallStartTime;
+      const errorTimeSec = (errorTimeMs / 1000).toFixed(2);
+
       client.emit('error', {
         message: (error as Error).message || 'Unknown error occurred.',
+        executionTime: `${errorTimeSec}s`,
       });
     }
   }

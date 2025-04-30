@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsString, Min, Validate } from 'class-validator';
-import { IsUniqueNameConstraint } from '../constraint/is-unique-name.constraint';
+import { IsUniqueRoomNameConstraint } from '../constraint/is-unique-room-name.constraint';
 
 export class CreateRoomDto {
   @IsString()
   @IsNotEmpty()
-  @Validate(IsUniqueNameConstraint)
+  @Validate(IsUniqueRoomNameConstraint)
   @ApiProperty({
     example: 'HDX',
   })

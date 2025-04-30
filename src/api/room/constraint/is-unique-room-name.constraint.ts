@@ -8,7 +8,9 @@ import { Injectable } from '@nestjs/common';
 
 @ValidatorConstraint({ async: true })
 @Injectable()
-export class IsUniqueNameConstraint implements ValidatorConstraintInterface {
+export class IsUniqueRoomNameConstraint
+  implements ValidatorConstraintInterface
+{
   constructor(private readonly roomService: RoomService) {}
 
   async validate(name: string) {
