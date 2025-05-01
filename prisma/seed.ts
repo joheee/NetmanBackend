@@ -310,6 +310,41 @@ async function main() {
     ],
   });
 
+  // DUMMY TESTING DATA
+  const testingRoom = await prisma.room.create({
+    data: {
+      name: 'HDX',
+      capacity: 1,
+    },
+  });
+
+  const testingComputer = await prisma.computer.create({
+    data: {
+      roomId: testingRoom.id,
+      number: 1,
+      ip: '192.168.206.139',
+      mac: '00-0C-29-0F-CC-9C',
+      hostname: 'netman',
+    },
+  });
+
+  const testingCommand = await prisma.command.create({
+    data: {
+      name: 'Dummy start explorer',
+      type: 'CONTROL',
+      value: 'start explorer',
+    },
+  });
+
+  await prisma.logCommandComputer.create({
+    data: {
+      statusCode: '0',
+      executionTime: 1.1,
+      computerId: testingComputer.id,
+      commandId: testingCommand.id,
+    },
+  });
+
   console.log('Seeding completed!');
 }
 
