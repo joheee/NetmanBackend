@@ -29,6 +29,16 @@ export class ComputerService {
     });
   }
 
+  async getNotFoundIps(ips: string[]) {
+    const results = await Promise.all(
+      ips.map(async (ip) => {
+        const found = await this.findOneByIp(ip);
+        return found ? null : ip;
+      }),
+    );
+    return results.filter((ip): ip is string => ip !== null);
+  }
+
   async findOneByMac(mac: string) {
     return await this.prisma.computer.findFirst({
       where: { mac },

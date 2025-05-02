@@ -16,6 +16,8 @@ import { IsComputerIdExistConstraint } from '../computer/constraint/is-computer-
     ComputerService,
     IsCommandIdExistConstraint,
     IsComputerIdExistConstraint,
+    ComputerService,
+    CommandService,
   ],
 })
 export class LogCommandComputerModule {}

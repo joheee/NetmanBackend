@@ -2,10 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { CreateLogCommandComputerDto } from './dto/create-log_command_computer.dto';
 import { UpdateLogCommandComputerDto } from './dto/update-log_command_computer.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ComputerService } from '../computer/computer.service';
+import { CommandService } from '../command/command.service';
 
 @Injectable()
 export class LogCommandComputerService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly computerService: ComputerService,
+    private readonly commandService: CommandService,
+  ) {}
 
   private include() {
     return {
@@ -20,6 +26,23 @@ export class LogCommandComputerService {
     return await this.prisma.logCommandComputer.create({
       data: createLogCommandComputerDto,
       ...this.include(),
+    });
+  }
+
+  async createByIps(
+    ip: string,
+    commandId: string,
+    statusCode: string,
+    executionTime: number,
+  ) {
+    const findComputerByIp = await this.computerService.findOneByIp(ip);
+    return await this.prisma.logCommandComputer.create({
+      data: {
+        commandId,
+        statusCode,
+        executionTime,
+        computerId: findComputerByIp.id,
+      },
     });
   }
 

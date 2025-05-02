@@ -7,9 +7,13 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { spawn } from 'child_process';
-import { fromEvent, map, merge } from 'rxjs';
+import { fromEvent, map, merge, mergeMap } from 'rxjs';
 import { Socket } from 'socket.io';
 import serverConfig from 'src/config/server.config';
+import { ExecuteCommandDto } from './dto/execute-command.dto';
+import { ComputerService } from '../computer/computer.service';
+import { CommandService } from '../command/command.service';
+import { LogCommandComputerService } from '../log_command_computer/log_command_computer.service';
 
 @WebSocketGateway({
   cors: {
@@ -20,6 +24,9 @@ export class ChildProcessGateway {
   constructor(
     @Inject(serverConfig.KEY)
     private serverConfiguration: ConfigType<typeof serverConfig>,
+    private computerService: ComputerService,
+    private commandService: CommandService,
+    private logCommandComputerService: LogCommandComputerService,
   ) {}
 
   @SubscribeMessage('testingConnection')
@@ -30,39 +37,52 @@ export class ChildProcessGateway {
   }
 
   @SubscribeMessage('executeCommand')
-  handleExecuteCommand(
-    @MessageBody() data: unknown,
+  async handleExecuteCommand(
+    @MessageBody() stringData: string,
     @ConnectedSocket() client: Socket,
   ) {
     const overallStartTime = Date.now();
 
     try {
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
+      // Parse data if it's a string
+      const data = JSON.parse(stringData) as ExecuteCommandDto;
+
+      // Manual validation
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid data format - must be a JSON object');
       }
 
-      if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-        throw new Error('Data must be a valid JSON object.');
+      // IP's must be a non empty array
+      if (!Array.isArray(data.ips) || data.ips.length === 0) {
+        throw new Error('IPs must be a non-empty array');
       }
 
-      const { ips, command: customCommand } = data as {
-        ips: string[];
-        command: string;
-      };
+      // Required commandId
+      if (!data.commandId) {
+        throw new Error('CommandId is required');
+      }
 
-      if (
-        !Array.isArray(ips) ||
-        ips.length === 0 ||
-        typeof customCommand !== 'string'
-      ) {
+      // CommandId must be string
+      if (typeof data.commandId !== 'string') {
+        throw new Error(`CommandId must be a string`);
+      }
+
+      // Validate if there is any IP's that is not found in the computer table
+      const notFoundIps = await this.computerService.getNotFoundIps(data.ips);
+      if (notFoundIps.length > 0) {
         throw new Error(
-          'Both "ips" (as array) and "command" (as string) are required.',
+          `The following IPs were not found: ${notFoundIps.join(', ')}`,
         );
+      }
+
+      const findCommandById = await this.commandService.findOne(data.commandId);
+      if (!findCommandById) {
+        throw new Error(`Command ID ${data.commandId.toString()} is not found`);
       }
 
       const ipTimings = new Map<string, number>();
 
-      ips.forEach((ip) => {
+      data.ips.forEach((ip) => {
         ipTimings.set(ip, Date.now());
 
         const command = 'psexec';
@@ -76,7 +96,7 @@ export class ChildProcessGateway {
           '1',
           'cmd',
           '/c',
-          customCommand,
+          findCommandById.value,
         ];
 
         const child = spawn(command, args);
@@ -108,14 +128,24 @@ export class ChildProcessGateway {
         );
 
         const close$ = fromEvent<number>(child, 'close').pipe(
-          map((code) => {
+          mergeMap(async (code) => {
             const executionTimeMs = Date.now() - ipTimings.get(ip);
             const executionTimeSec = (executionTimeMs / 1000).toFixed(2);
+
+            const createLogCommandComputer =
+              await this.logCommandComputerService.createByIps(
+                ip,
+                data.commandId,
+                `${code[0]}`,
+                parseFloat(executionTimeSec),
+              );
+
             return {
               ip,
               type: 'close',
-              code,
+              statusCode: code[0],
               executionTime: `${executionTimeSec} s`,
+              logCommandComputer: createLogCommandComputer,
             };
           }),
         );
@@ -126,7 +156,7 @@ export class ChildProcessGateway {
       });
 
       client.emit('executeCommandStarted', {
-        message: `Command execution started for ${ips.length} machines`,
+        message: `Command execution started for ${data.ips.length} machines`,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
