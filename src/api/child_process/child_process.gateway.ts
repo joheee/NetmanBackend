@@ -30,9 +30,13 @@ export class ChildProcessGateway {
   ) {}
 
   @SubscribeMessage('testingConnection')
-  handleTestingConnection(@ConnectedSocket() client: Socket) {
+  handleTestingConnection(
+    @MessageBody() stringData: string,
+    @ConnectedSocket() client: Socket,
+  ) {
     client.emit('testingConnectionOutput', {
       message: 'connection success',
+      body: JSON.parse(stringData),
     });
   }
 
