@@ -14,6 +14,7 @@ import { ExecuteCommandDto } from './dto/execute-command.dto';
 import { ComputerService } from '../computer/computer.service';
 import { CommandService } from '../command/command.service';
 import { LogCommandComputerService } from '../log_command_computer/log_command_computer.service';
+import { EventEmitter } from 'node:events';
 
 @WebSocketGateway({
   cors: {
@@ -34,10 +35,88 @@ export class ChildProcessGateway {
     @MessageBody() stringData: string,
     @ConnectedSocket() client: Socket,
   ) {
-    client.emit('testingConnectionOutput', {
-      message: 'connection success',
-      body: JSON.parse(stringData),
-    });
+    const overallStartTime = Date.now();
+
+    try {
+      const data = JSON.parse(stringData);
+
+      if (!data || !Array.isArray(data.ips) || data.ips.length === 0) {
+        throw new Error('IPs must be a non-empty array');
+      }
+
+      const ipTimings = new Map<string, number>();
+
+      data.ips.forEach((ip) => {
+        ipTimings.set(ip, Date.now());
+
+        const dummyProcess = new EventEmitter();
+
+        setTimeout(() => {
+          dummyProcess.emit('data', Buffer.from('Connection test successful'));
+        }, 1000);
+
+        setTimeout(() => {
+          dummyProcess.emit('close', [0]);
+        }, 500);
+
+        const stdout$ = fromEvent<Buffer>(dummyProcess, 'data').pipe(
+          map((data) => {
+            const executionTimeMs = Date.now() - ipTimings.get(ip);
+            const executionTimeSec = (executionTimeMs / 1000).toFixed(2);
+            return {
+              ip,
+              type: 'stdout',
+              message: data.toString().trim(),
+              executionTime: `${executionTimeSec} s`,
+            };
+          }),
+        );
+
+        const stderr$ = fromEvent<Buffer>(dummyProcess, 'stderr').pipe(
+          map((data) => {
+            const executionTimeMs = Date.now() - ipTimings.get(ip);
+            const executionTimeSec = (executionTimeMs / 1000).toFixed(2);
+            return {
+              ip,
+              type: 'stderr',
+              message: data.toString().trim(),
+              executionTime: `${executionTimeSec} s`,
+            };
+          }),
+        );
+
+        const close$ = fromEvent<number>(dummyProcess, 'close').pipe(
+          map((code) => {
+            const executionTimeMs = Date.now() - ipTimings.get(ip);
+            const executionTimeSec = (executionTimeMs / 1000).toFixed(2);
+
+            return {
+              ip,
+              type: 'close',
+              statusCode: code[0],
+              executionTime: `${executionTimeSec} s`,
+            };
+          }),
+        );
+
+        merge(stdout$, stderr$, close$).subscribe((payload) => {
+          client.emit('testingConnectionOutput', payload);
+        });
+      });
+
+      client.emit('testingConnectionStarted', {
+        message: `Connection test started for ${data.ips.length} IPs`,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      const errorTimeMs = Date.now() - overallStartTime;
+      const errorTimeSec = (errorTimeMs / 1000).toFixed(2);
+
+      client.emit('error', {
+        message: (error as Error).message || 'Unknown error occurred.',
+        executionTime: `${errorTimeSec}s`,
+      });
+    }
   }
 
   @SubscribeMessage('executeCommand')
