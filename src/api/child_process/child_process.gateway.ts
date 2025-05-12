@@ -53,11 +53,11 @@ export class ChildProcessGateway {
 
         setTimeout(() => {
           dummyProcess.emit('data', Buffer.from('Connection test successful'));
-        }, 1000);
+        }, 500);
 
         setTimeout(() => {
           dummyProcess.emit('close', [0]);
-        }, 500);
+        }, 1000);
 
         const stdout$ = fromEvent<Buffer>(dummyProcess, 'data').pipe(
           map((data) => {
