@@ -247,7 +247,7 @@ export class ChildProcessGateway {
       const errorTimeSec = (errorTimeMs / 1000).toFixed(2);
 
       client.emit('error', {
-        message: (error as Error).message || 'Unknown error occurred.',
+        message: (error as Error).message || 'Unknown error occurred',
         executionTime: `${errorTimeSec}s`,
       });
     }
