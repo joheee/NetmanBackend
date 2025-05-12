@@ -7,14 +7,20 @@
   "private": true,
   "license": "UNLICENSED",
   "pkg": {
+    "bin": "dist/src/main.js",
     "targets": [
       "node18-win-x64"
+    ],
+    "assets": [
+      "node_modules/swagger-ui-dist/**/*",
+      "build/prisma-engines/query_engine-windows.dll.node",
+      ".env"
     ],
     "outputPath": "build"
   },
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"  test/**/*.ts\"",
     "start": "nest start",
     "seed": "ts-node prisma/seed.ts",
     "dev": "nest start --watch",
@@ -25,7 +31,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "postinstall": "prisma generate",
+    "copy:engine": "cmd /c \"mkdir build\\prisma-engines & copy node_modules\\@prisma\\engines\\query_engine-windows.dll.node build\\prisma-engines\\\"",
+    "build:exe": "npm run build && npm run copy:engine && pkg ."
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
