@@ -11,7 +11,7 @@ interface WolResponse {
 
 @Injectable()
 export class WolService {
-  async create(createWolDto: CreateWolDto): Promise<WolResponse> {
+  async create(createWolDto: CreateWolDto) {
     const wol = require('wake_on_lan');
 
     try {
