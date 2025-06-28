@@ -14,7 +14,11 @@ export class ComputerService {
   }
 
   async findAll() {
-    return await this.prisma.computer.findMany();
+    return await this.prisma.computer.findMany({
+      orderBy: {
+        ip: 'asc',
+      },
+    });
   }
 
   async findOne(id: string) {

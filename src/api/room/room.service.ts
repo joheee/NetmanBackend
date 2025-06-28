@@ -10,7 +10,11 @@ export class RoomService {
   include() {
     return {
       include: {
-        computers: true,
+        computers: {
+          orderBy: {
+            ip: 'asc' as const,
+          },
+        },
       },
     };
   }
